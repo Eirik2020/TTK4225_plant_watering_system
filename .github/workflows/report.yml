@@ -1,0 +1,43 @@
+name: Build report
+
+on:
+  push:
+    paths:
+      - "latex/**"
+      - ".github/workflows/report.yml"
+  pull_request:
+    paths:
+      - "latex/**"
+      - ".github/workflows/report.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Compile report
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: main.tex
+          working_directory: latex
+          texlive_version: 2024
+          os: debian
+          latexmk_use_lualatex: true
+
+      - name: Stage final PDF
+        run: |
+          mkdir -p latex/dist
+          cp latex/build/main.pdf latex/dist/report.pdf
+
+      - name: Upload PDF
+        uses: actions/upload-artifact@v7
+        with:
+          name: project-report
+          path: latex/dist/report.pdf
+          if-no-files-found: error

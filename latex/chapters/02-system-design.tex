@@ -1,0 +1,21 @@
+\chapter{System Design}
+\label{chap:system-design}
+
+Describe the overall architecture and the interaction between sensors,
+controller, power supply, and watering actuator.
+
+\section{Hardware architecture}
+
+Document the ESP32 development board, moisture sensor, pump or valve, driver
+circuit, and power arrangement. The ESP32 is documented in the manufacturer's
+datasheet~\cite{esp32-datasheet}.
+
+\section{Software architecture}
+
+Describe the tasks, timing, shared state, and error handling. The firmware uses
+the Embassy asynchronous embedded framework~\cite{embassy-book}.
+
+\section{Control strategy}
+
+Explain how sensor measurements are converted into watering decisions,
+including thresholds, hysteresis, time limits, and safety behaviour.

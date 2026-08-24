@@ -1,0 +1,28 @@
+{
+  "latex-workshop.latex.autoBuild.run": "onSave",
+  "latex-workshop.latex.outDir": "%DIR%/build",
+  "latex-workshop.latex.auxDir": "%DIR%/build",
+  "latex-workshop.latex.recipe.default": "first",
+  "latex-workshop.latex.recipes": [
+    {
+      "name": "Native LuaLaTeX report build",
+      "tools": [
+        "native-latexmk"
+      ]
+    }
+  ],
+  "latex-workshop.latex.tools": [
+    {
+      "name": "native-latexmk",
+      "command": "latexmk",
+      "args": [
+        "-lualatex",
+        "%DOC_EXT%"
+      ],
+      "cwd": "%DIR%"
+    }
+  ],
+  "latex-workshop.view.pdf.viewer": "tab",
+  "latex-workshop.view.pdf.tab.editorGroup": "right",
+  "latex-workshop.synctex.afterBuild.enabled": true
+}

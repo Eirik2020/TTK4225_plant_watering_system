@@ -1,0 +1,61 @@
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+
+\usepackage[a4paper,margin=28mm]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+
+\usepackage{graphicx}
+\graphicspath{{figures/}}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{xcolor}
+\usepackage{csquotes}
+\usepackage{listings}
+
+\definecolor{codebackground}{HTML}{F5F5F5}
+\definecolor{codecomment}{HTML}{5F6A5A}
+\definecolor{codekeyword}{HTML}{7A3E9D}
+\definecolor{codestring}{HTML}{A34A28}
+
+\lstdefinelanguage{Rust}{
+  morekeywords={as,async,await,break,const,continue,crate,dyn,else,enum,extern,false,fn,for,if,impl,in,let,loop,match,mod,move,mut,pub,ref,return,self,Self,static,struct,super,trait,true,type,unsafe,use,where,while},
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]"
+}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{codebackground},
+  commentstyle=\color{codecomment},
+  keywordstyle=\color{codekeyword}\bfseries,
+  stringstyle=\color{codestring},
+  frame=single,
+  framerule=0pt,
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+  numbers=left,
+  numberstyle=\scriptsize\color{gray},
+  showstringspaces=false,
+  tabsize=2
+}
+
+\usepackage[
+  backend=biber,
+  style=ieee,
+  sorting=none
+]{biblatex}
+\addbibresource{references/references.bib}
+
+\usepackage[hidelinks]{hyperref}
+\usepackage[nameinlink,noabbrev]{cleveref}
+
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{2}
+\setlength{\parindent}{1.5em}
+\setlength{\parskip}{0pt}

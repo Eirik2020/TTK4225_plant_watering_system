@@ -1,0 +1,4 @@
+[toolchain]
+# The original ESP32 uses Xtensa, which currently requires Espressif's Rust fork.
+# Install it with `cargo install espup --locked` followed by `espup install`.
+channel = "esp"

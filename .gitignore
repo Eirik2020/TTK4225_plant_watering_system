@@ -1,0 +1,13 @@
+/target/
+*.bin
+*.elf
+*.uf2
+*.map
+.DS_Store
+.idea/
+.vscode/*.log
+
+# LaTeX report outputs
+latex/build/
+latex/dist/*.pdf
+!latex/dist/.gitkeep

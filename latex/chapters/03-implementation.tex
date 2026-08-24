@@ -1,0 +1,26 @@
+\chapter{Implementation}
+\label{chap:implementation}
+
+Describe how the design was realized in hardware and software.
+
+\section{Analog measurement}
+
+Document the selected ADC pin, attenuation, sample rate, filtering, and dry/wet
+sensor calibration.
+
+\section{Firmware}
+
+Small, relevant excerpts can be included directly:
+
+\begin{lstlisting}[language=Rust,caption={Example Embassy task structure.},label={lst:embassy-task}]
+#[embassy_executor::task]
+async fn monitor_soil() {
+    loop {
+        // Sample, filter, and process the sensor value.
+        Timer::after(Duration::from_secs(1)).await;
+    }
+}
+\end{lstlisting}
+
+Keep complete source code in the repository and use the report to explain the
+important design choices.

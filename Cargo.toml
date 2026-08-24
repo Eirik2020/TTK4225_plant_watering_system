@@ -1,0 +1,14 @@
+[workspace]
+members = ["firmware"]
+default-members = ["firmware"]
+resolver = "3"
+
+[profile.dev]
+# Unoptimized firmware is slow and large on embedded targets.
+opt-level = "s"
+
+[profile.release]
+codegen-units = 1
+debug = 2
+lto = "fat"
+opt-level = "s"

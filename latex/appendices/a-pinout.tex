@@ -1,0 +1,20 @@
+\chapter{Pin Assignment}
+\label{app:pinout}
+
+Keep the final wiring assignment here so it can be checked independently of the
+implementation discussion.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Initial ESP32 pin assignment.}
+  \label{tab:pin-assignment}
+  \begin{tabular}{lll}
+    \toprule
+    Function & ESP32 pin & Notes \\
+    \midrule
+    Status LED & GPIO2 & On-board LED on common board variants \\
+    Soil moisture input & GPIO34 & ADC1 input; input-only GPIO \\
+    Pump control & TBD & Drive through a suitable transistor or MOSFET \\
+    \bottomrule
+  \end{tabular}
+\end{table}

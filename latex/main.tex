@@ -1,0 +1,52 @@
+\documentclass[11pt,a4paper,oneside,open=any]{scrreprt}
+
+\input{preamble}
+\input{metadata}
+
+\hypersetup{
+  pdftitle={\reporttitle},
+  pdfauthor={\reportauthor}
+}
+
+\begin{document}
+
+\hypersetup{pageanchor=false}
+\begin{titlepage}
+  \centering
+  \vspace*{2cm}
+  {\Large \reportinstitution\par}
+  \vspace{0.5cm}
+  {\large \reportcourse\par}
+  \vfill
+  {\Huge\bfseries \reporttitle\par}
+  \vspace{0.6cm}
+  {\Large \reportsubtitle\par}
+  \vfill
+  {\large \reportauthor\par}
+  \vspace{0.8cm}
+  {\large Supervisor: \reportsupervisor\par}
+  \vfill
+  {\large \reportdate\par}
+\end{titlepage}
+
+\hypersetup{pageanchor=true}
+\pagenumbering{roman}
+\input{frontmatter/abstract}
+\tableofcontents
+
+\clearpage
+\pagenumbering{arabic}
+\include{chapters/01-introduction}
+\include{chapters/soil_cal}
+\include{chapters/02-system-design}
+\include{chapters/03-implementation}
+\include{chapters/04-testing-and-results}
+\include{chapters/05-discussion}
+\include{chapters/06-conclusion}
+
+\printbibliography[heading=bibintoc]
+
+\appendix
+\include{appendices/a-pinout}
+
+\end{document}
