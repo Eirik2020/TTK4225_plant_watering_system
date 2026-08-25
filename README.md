@@ -25,6 +25,7 @@ The project is organized around three core goals:
 | Automatic watering logic | Planned |
 | LaTeX project report | Set up; CI workflow configured |
 | Python USB serial reader and CSV logger | Implemented |
+| Raspberry Pi unattended logger service | Implemented; reproducible installer included |
 | Python plotting or data processing | Planned |
 
 The firmware samples the ADC at 100 Hz and calculates one non-overlapping
@@ -64,12 +65,14 @@ and inductive-load protection where required.
 .
 |-- .cargo/                 ESP32 target and espflash runner configuration
 |-- .github/workflows/      Automated LaTeX report build
+|-- deploy/raspberry-pi/    Reproducible Raspberry Pi service installation
+|-- docs/                   Deployment and operating guides
 |-- firmware/               Bare-metal Rust firmware crate
 |   |-- src/bin/main.rs     Firmware entry point
 |   |-- Cargo.toml          Firmware dependencies
 |   `-- build.rs            ESP32 linker configuration
 |-- latex/                  Project report and build scripts
-|-- python/                 USB serial reader and future plotting tools
+|-- python/                 USB serial reader, CSV logger, and calibration tools
 |-- Cargo.toml              Cargo workspace configuration
 |-- Cargo.lock              Locked Rust dependencies
 `-- rust-toolchain.toml     Espressif Rust toolchain selection
@@ -214,6 +217,26 @@ The firmware uses [Embassy](https://embassy.dev/) with
 Embassy runtime currently requires the HAL's `unstable` feature, so minor HAL
 updates can require API changes.
 
+## Raspberry Pi unattended logging
+
+The repository includes a systemd template service and installer for recording
+measurements continuously on a Raspberry Pi. From a clone on the Pi, connect
+the ESP32 over USB and run:
+
+```bash
+sudo bash deploy/raspberry-pi/install-service.sh --name soil_measurement
+```
+
+The installer detects the stable `/dev/serial/by-id/...` device, prepares the
+Python virtual environment and serial permissions, and enables a named service
+instance at boot. The instance name becomes the CSV filename prefix; the logger
+adds its start timestamp automatically.
+
+See [`docs/raspberry-pi.md`](docs/raspberry-pi.md) for the complete fresh-Pi
+setup, migration from the original service, custom measurement names, service
+control, timestamp inspection, troubleshooting, and Windows `scp` download
+commands.
+
 ## Soil-moisture calibration
 
 Raw ESP32 ADC readings are not absolute moisture percentages. A practical
@@ -288,7 +311,7 @@ workflow artifact.
 ## Planned work
 
 - Validate the soil-moisture calibration against additional reference runs.
-- Add filtering and long-term moisture logging.
+- Validate multi-week moisture logging and recovery after power or USB faults.
 - Select and validate a safe pump driver and power architecture.
 - Add watering thresholds, hysteresis, maximum run time, and fault handling.
 - Plot moisture measurements over time using the `python/` tools.

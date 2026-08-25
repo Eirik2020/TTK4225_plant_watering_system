@@ -1,0 +1,26 @@
+[Unit]
+Description=ESP32 soil-moisture CSV logger (%i)
+After=local-fs.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=@SERVICE_USER@
+Group=@SERVICE_GROUP@
+SupplementaryGroups=dialout
+EnvironmentFile=/etc/default/plant-measurement
+ExecStart=/usr/bin/env ${VENV_PYTHON} ${LOGGER_SCRIPT} %i \
+    --port ${SERIAL_PORT} \
+    --baudrate ${BAUD_RATE} \
+    --output-dir ${OUTPUT_DIR}
+Restart=on-failure
+RestartSec=10
+KillSignal=SIGINT
+TimeoutStopSec=10
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target
