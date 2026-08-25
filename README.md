@@ -1,40 +1,96 @@
 # TTK4225 plant watering system
 
-Bare-metal Rust firmware for the **Seeit ESP32-DEV-38P** development board,
-using [Embassy](https://embassy.dev/) and
-[esp-hal](https://docs.espressif.com/projects/rust/esp-hal/latest/).
+An ESP32-based automatic plant watering system developed as part of TTK4225 at
+the Norwegian University of Science and Technology (NTNU).
 
-The board uses the classic ESP32-WROOM-32 module. This is an Xtensa ESP32—not
-an ESP32-C6—so the repository targets `xtensa-esp32-none-elf` with Espressif's
-Rust toolchain.
+This repository is a Rust and Embassy implementation inspired by the ITK
+student-active learning project
+[Plants-watering-system](https://github.com/Microlabs-Project-ITK-NTNU/Plants-watering-system).
+The project is organized around three core goals:
 
-Board reference: [Seeit ESP32-DEV-30P/38P datasheet](https://docs.rs-online.com/7729/A700000011181234.pdf).
+1. Measure soil moisture.
+2. Control a water pump safely.
+3. Use the measured moisture level to decide when the plant should be watered.
 
-The initial firmware prints a hello-world message over UART and asynchronously
-toggles GPIO2 every 500 ms.
+## Current status
 
-The repository is a Cargo workspace: embedded source lives under `firmware/`,
-while the project report lives under `latex/`. Cargo commands can still be run
-from the repository root because `firmware` is the default workspace member.
+| Area | Status |
+| --- | --- |
+| ESP32 firmware workspace | Implemented |
+| Asynchronous Embassy runtime | Implemented |
+| GPIO2 heartbeat LED | Implemented at 0.5 Hz |
+| ADC sampling on GPIO34 | 100 Hz sampling; 0.1 Hz filtered raw output |
+| Soil-sensor calibration | In progress |
+| Pump driver and pump control | Planned |
+| Automatic watering logic | Planned |
+| LaTeX project report | Set up; CI workflow configured |
+| Python USB serial reader and CSV logger | Implemented |
+| Python plotting or data processing | Planned |
 
-## LED
+The firmware samples the ADC at 100 Hz and calculates one non-overlapping
+1,000-sample average every 10 seconds. That filtered raw value is sent over
+serial at 0.1 Hz. The status LED completes one on/off heartbeat cycle every two
+seconds. The firmware does not yet operate a pump or make automatic watering
+decisions.
 
-GPIO2 is commonly connected to the controllable status LED on 38-pin ESP32
-development boards. If the LED on your particular board is only a power LED,
-connect an external LED instead:
+## Hardware
+
+The firmware targets the **Seeit ESP32-DEV-38P**, which uses the classic
+ESP32-WROOM-32 module. This is an Xtensa ESP32, not an ESP32-C6, so the Rust
+target is `xtensa-esp32-none-elf`.
+
+Board reference:
+[Seeit ESP32-DEV-30P/38P datasheet](https://docs.rs-online.com/7729/A700000011181234.pdf).
+
+### Current pin assignment
+
+| Function | ESP32 pin | Notes |
+| --- | --- | --- |
+| Status LED | GPIO2 | Common on-board LED connection |
+| Soil-moisture analog input | GPIO34 | ADC1 input; input-only GPIO |
+| Pump control | TBD | Requires an external driver circuit |
+
+For an analog moisture sensor, connect its analog output to GPIO34 and its
+ground to ESP32 ground. Ensure the sensor output never exceeds the ESP32 GPIO
+voltage limit.
+
+Do not power a pump directly from an ESP32 GPIO. Use a suitable MOSFET,
+transistor, or relay driver, an appropriate pump power supply, a common ground,
+and inductive-load protection where required.
+
+## Repository layout
 
 ```text
-GPIO2 ---- 220-1000 ohm resistor ---- LED anode (+)
-GND   ------------------------------ LED cathode (-)
+.
+|-- .cargo/                 ESP32 target and espflash runner configuration
+|-- .github/workflows/      Automated LaTeX report build
+|-- firmware/               Bare-metal Rust firmware crate
+|   |-- src/bin/main.rs     Firmware entry point
+|   |-- Cargo.toml          Firmware dependencies
+|   `-- build.rs            ESP32 linker configuration
+|-- latex/                  Project report and build scripts
+|-- python/                 USB serial reader and future plotting tools
+|-- Cargo.toml              Cargo workspace configuration
+|-- Cargo.lock              Locked Rust dependencies
+`-- rust-toolchain.toml     Espressif Rust toolchain selection
 ```
 
-GPIO2 is a boot-strapping pin. The circuit above is safe for this example, but
-avoid external circuitry that forces it high during reset.
+The `firmware` crate is the default Cargo workspace member, so all Cargo
+commands below can be run from the repository root.
 
-## Prerequisites
+Clone the repository with:
 
-Install [Rust](https://rustup.rs/), Espressif's Xtensa Rust toolchain, and the
-flashing utility:
+```powershell
+git clone https://github.com/Eirik2020/TTK4225_plant_watering_system.git
+cd TTK4225_plant_watering_system
+```
+
+## Firmware setup
+
+### Prerequisites
+
+Install [Rust](https://rustup.rs/), Espressif's Xtensa Rust toolchain, and
+`espflash`:
 
 ```powershell
 cargo install espup --locked
@@ -42,62 +98,171 @@ espup install
 cargo install espflash --locked
 ```
 
-On Windows, `espup` configures the toolchain environment automatically. Restart
-the terminal after installation if the `esp` toolchain is not found. The board's
+Restart the terminal after installing the toolchain. On Windows, the board's
 USB-to-UART bridge may also require a CP210x or CH340 driver, depending on the
 board revision.
 
-## Build
+### Build
 
 ```powershell
 cargo build --release
 ```
 
-## Flash and monitor
+### Flash and monitor
 
-Connect the board over USB, then run:
+Connect the board over USB and run:
 
 ```powershell
 cargo run --release
 ```
 
-The runner in `.cargo/config.toml` builds, flashes with `espflash`, and opens the
-serial monitor. Press `Ctrl+C` to exit. If automatic reset does not enter the
-bootloader, hold **BOOT**, press and release **EN/RESET**, then release **BOOT**
-and retry.
+The runner in `.cargo/config.toml` flashes the classic ESP32 and opens the
+serial monitor. Press `Ctrl+C` to exit.
 
-Expected monitor output:
+If automatic reset does not enter the bootloader, hold **BOOT**, press and
+release **EN/RESET**, release **BOOT**, and retry the command. You can inspect
+all detected serial ports with:
+
+```powershell
+espflash board-info --list-all-ports
+```
+
+Expected monitor output resembles:
 
 ```text
 Hello, world from Embassy on the ESP32-DEV-38P!
-LED on
-LED off
+Sampling ADC1 GPIO34 at 100 Hz; reporting a 1000-sample average at 0.1 Hz.
+MOISTURE filtered_raw=2087 samples=1000
+MOISTURE filtered_raw=2091 samples=1000
 ...
 ```
 
-## Useful commands
+The reported number remains in raw ADC units; no moisture-percentage or voltage
+conversion is applied. Its exact value depends on the connected sensor and
+moisture condition.
+
+## Read and log ADC samples with Python
+
+The Python reader listens to the firmware output over USB serial, extracts the
+`MOISTURE filtered_raw` messages, prints them to the terminal, and appends them
+to a CSV file using the computer's local clock.
+
+Install its dependency from the repository root:
 
 ```powershell
-cargo +stable fmt --check
+python -m pip install -r python/requirements.txt
+```
+
+Flash the firmware first, then close the `espflash` serial monitor with
+`Ctrl+C`. Only one program can use COM8 at a time. Start the reader and provide
+a name for the measurement session with:
+
+```powershell
+python python/main.py soil_dry
+```
+
+This creates a new file such as
+`python/data/soil_dry_20260824_130541.csv`. The timestamp suffix comes from the
+computer's local clock when the script starts. If the name is omitted, it
+defaults to `adc_readings`.
+
+COM8, 115200 baud, and the `python/data` output directory are the defaults.
+Override them when necessary:
+
+```powershell
+python python/main.py soil_wet --port COM9 --baudrate 115200
+python python/main.py soil_wet --output-dir measurements
+```
+
+List detected serial ports or display every firmware message with:
+
+```powershell
+python python/main.py --list-ports
+python python/main.py --all
+```
+
+Expected output:
+
+```text
+Listening for ADC readings on COM8 at 115200 baud.
+Logging samples to C:\...\python\data\soil_dry_20260824_130541.csv.
+Press Ctrl+C to stop.
+2026-08-24T13:05:41.321+02:00 | Filtered ADC raw value: 2087
+2026-08-24T13:05:51.321+02:00 | Filtered ADC raw value: 2091
+...
+```
+
+The CSV file is append-only and has the following format:
+
+```csv
+timestamp,adc_filtered_raw
+2026-08-24T13:05:41.321+02:00,2087
+2026-08-24T13:05:51.321+02:00,2091
+```
+
+### Useful firmware commands
+
+```powershell
+cargo +stable fmt --all -- --check
 cargo check
 cargo build --release
 cargo clean
 ```
 
-The project follows the current
-[`esp-generate`](https://github.com/esp-rs/esp-generate) Embassy layout and pins
-the ESP HAL 1.1 release line. Embassy's runtime currently requires the HAL's
-`unstable` feature, so minor HAL updates can require small API adjustments.
+The firmware uses [Embassy](https://embassy.dev/) with
+[esp-hal](https://docs.espressif.com/projects/rust/esp-hal/latest/) 1.1. The
+Embassy runtime currently requires the HAL's `unstable` feature, so minor HAL
+updates can require API changes.
+
+## Soil-moisture calibration
+
+Raw ESP32 ADC readings are not moisture percentages. A practical calibration
+procedure is:
+
+1. Record several readings with the probe in the chosen dry reference
+   condition.
+2. Record several readings with the probe in the chosen wet reference
+   condition.
+3. Average or filter the readings to reduce noise.
+4. Map values between the dry and wet references to a relative moisture scale.
+5. Validate the chosen watering threshold using the actual plant and soil.
+
+Calibration results and methodology belong in
+[`latex/chapters/soil_cal.tex`](latex/chapters/soil_cal.tex).
 
 ## Report
 
-The project report lives in [`latex/`](latex/). Build it on Windows with:
+The project report lives under [`latex/`](latex/). Build it on Windows with:
 
 ```powershell
 cd latex
 .\scripts\build.ps1
 ```
 
-The finished document is written to `latex/dist/report.pdf`. See
-[`latex/README.md`](latex/README.md) for the native, Docker, VS Code, and clean
-build options.
+The script uses a native `latexmk` installation when available and otherwise
+falls back to Docker. The finished document is written to
+`latex/dist/report.pdf`.
+
+With the recommended VS Code LaTeX Workshop extension:
+
+- `Ctrl+Alt+B` builds the report;
+- `Ctrl+Alt+V` opens the PDF preview;
+- saving a LaTeX file rebuilds and refreshes the split-screen preview.
+
+See [`latex/README.md`](latex/README.md) for native, Docker, clean-build, and
+editor details. GitHub Actions also builds the report and uploads the PDF as a
+workflow artifact.
+
+## Planned work
+
+- Characterize and calibrate the selected soil-moisture sensor.
+- Add filtering and long-term moisture logging.
+- Select and validate a safe pump driver and power architecture.
+- Add watering thresholds, hysteresis, maximum run time, and fault handling.
+- Plot moisture measurements over time using the `python/` tools.
+- Consider a reservoir-level sensor and local or web-based status reporting.
+
+## Acknowledgements
+
+The project direction and learning milestones are based on the open-source
+[Microlabs Project at NTNU's Department of Engineering Cybernetics](https://github.com/Microlabs-Project-ITK-NTNU/Plants-watering-system).

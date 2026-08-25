@@ -7,6 +7,12 @@
 .idea/
 .vscode/*.log
 
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+python/data/*.csv
+
 # LaTeX report outputs
 latex/build/
 latex/dist/*.pdf
