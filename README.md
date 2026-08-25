@@ -216,16 +216,48 @@ updates can require API changes.
 
 ## Soil-moisture calibration
 
-Raw ESP32 ADC readings are not moisture percentages. A practical calibration
-procedure is:
+Raw ESP32 ADC readings are not absolute moisture percentages. A practical
+two-point calibration procedure is:
 
 1. Record several readings with the probe in the chosen dry reference
    condition.
-2. Record several readings with the probe in the chosen wet reference
-   condition.
+2. Record several readings at the soil's field-capacity reference condition.
 3. Average or filter the readings to reduce noise.
 4. Map values between the dry and wet references to a relative moisture scale.
 5. Validate the chosen watering threshold using the actual plant and soil.
+
+Calculate the current reference calibration with:
+
+```powershell
+python python/calibrate.py soil_dry_ref1 soil_field_cap_ref1
+```
+
+The names are resolved to the newest matching timestamped CSV files under
+`python/data`. By default, the script uses the median of the final 100 filtered
+reports from each file to reduce the influence of startup drift and outliers.
+For the current datasets this produces:
+
+```text
+Dry reference:           ADC 2852
+Field-capacity reference: ADC 2194
+ADC span:                    658
+```
+
+The resulting scale maps the dry reference to 0% and field capacity to 100%.
+It is a relative calibration, not absolute volumetric water content. Save the
+complete statistics and coefficients as JSON with:
+
+```powershell
+python python/calibrate.py soil_dry_ref1 soil_field_cap_ref1 `
+    --output python/calibration_ref1.json
+```
+
+The selected endpoint window and estimator can also be changed:
+
+```powershell
+python python/calibrate.py soil_dry_ref1 soil_field_cap_ref1 `
+    --tail-samples 200 --estimator mean
+```
 
 Calibration results and methodology belong in
 [`latex/chapters/soil_cal.tex`](latex/chapters/soil_cal.tex).
@@ -255,7 +287,7 @@ workflow artifact.
 
 ## Planned work
 
-- Characterize and calibrate the selected soil-moisture sensor.
+- Validate the soil-moisture calibration against additional reference runs.
 - Add filtering and long-term moisture logging.
 - Select and validate a safe pump driver and power architecture.
 - Add watering thresholds, hysteresis, maximum run time, and fault handling.
